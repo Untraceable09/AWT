@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Todo App</title>
+</head>
+<body>
+    <h1>Todo App</h1>
+
+    <input type="text" id="todoInput" placeholder="Enter a todo">
+    <button onclick="addTodo()">Add</button>
+
+    <h2>Todo List</h2>
+    <ul id="todoList"></ul>
+
+    <script>
+        window.onload = loadTodos;
+
+        async function loadTodos() {
+            const res = await fetch('/listtodos');
+            const todos = await res.json();
+
+            const list = document.getElementById('todoList');
+            list.innerHTML = '';
+
+            todos.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item.todo + (item.status === "True" ? " Done" : "");
+
+                const markBtn = document.createElement('button');
+                markBtn.textContent = "Mark Done";
+                markBtn.onclick = () => markTodo(item.todo);
+
+                const delBtn = document.createElement('button');
+                delBtn.textContent = "Delete";
+                delBtn.onclick = () => deleteTodo(item.todo);
+
+                li.appendChild(markBtn);
+                li.appendChild(delBtn);
+                list.appendChild(li);
+            });
+        }
+
+        async function addTodo() {
+            const input = document.getElementById('todoInput');
+            const todoText = input.value;
+
+            await fetch('/addtodo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ todo: todoText })
+            });
+
+            input.value = '';
+            loadTodos();
+        }
+
+        async function deleteTodo(todoText) {
+            await fetch('/deltodo', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ todo: todoText })
+            });
+
+            loadTodos();
+        }
+
+        async function markTodo(todoText) {
+            await fetch('/marktodo', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ todo: todoText })
+            });
+
+            loadTodos();
+        }
+    </script>
+</body>
+</html>
